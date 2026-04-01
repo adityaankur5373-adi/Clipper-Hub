@@ -1,0 +1,295 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  user
+  admin
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Platform {
+  YOUTUBE
+  INSTAGRAM
+}
+
+enum CampaignType {
+  MUSIC
+  CLIP
+  GAMING
+  BRAND
+}
+
+enum CampaignStatus {
+  PENDING
+  ACTIVE
+  CLOSED
+}
+
+enum RequestStatus {
+  PENDING
+  CONTACTED
+  APPROVED
+  REJECTED
+}
+
+enum PayoutStatus {   // ✅ ADDED (missing before)
+  PENDING
+  PAID
+  FAILED
+}
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+/* ============================= */
+/* USER */
+/* ============================= */
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  role      Role     @default(user)
+  name      String?
+  password  String?
+  avatar    String? 
+  createdAt DateTime @default(now())
+
+  balance   Float    @default(0)
+
+  accounts        Account[]
+  tokens          RefreshToken[]
+  socialAccounts  SocialAccount[]
+   withdrawals  Withdrawal[]  
+  submissions     Submission[]   // ✅ participation removed
+  transactions    Transaction[]
+  leaderboards    Leaderboard[]
+  paymentMethods PaymentMethod[]
+}
+
+/* ============================= */
+/* AUTH */
+/* ============================= */
+
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  user               User    @relation(fields: [userId], references: [id])
+
+  provider           String
+  providerAccountId  String
+
+  access_token       String?
+  refresh_token      String?
+
+  @@unique([provider, providerAccountId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+/* ============================= */
+/* SOCIAL */
+/* ============================= */
+
+model SocialAccount {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+
+  platform         Platform   // ✅ FIXED (was String)
+  profileUrl       String
+
+  verificationCode String
+  verified         Boolean  @default(false)
+  status           String   @default("pending")
+   channelId        String?   
+  platformUserId   String
+  submissions Submission[]
+  createdAt        DateTime @default(now())
+  verifiedAt       DateTime?
+ @@unique([platform, platformUserId])
+  @@index([userId])
+}
+
+/* ============================= */
+/* CAMPAIGN */
+/* ============================= */
+model Campaign {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String
+  details   String?
+
+  status    CampaignStatus @default(PENDING)
+  createdAt DateTime @default(now())
+
+  // 💰 Budget
+  totalBudget     Float   @default(0)
+  remainingBudget Float   @default(0)
+  ratePerMillion  Float   @default(0)
+  // 🎯 Campaign type
+  type CampaignType @default(MUSIC)
+  allowedPlatforms Platform[]
+
+  // 🖼️ Media
+  thumbnail       String?
+  bannerImage     String?
+  description     String?
+
+  // 🎵 Optional audio
+  audioUrl        String?
+  audioName       String?
+
+  // 🚀 Submission rules
+   maxSubmissions Int @default(200)   // per USER
+  maxSubmissionsPerAccount    Int   @default(1)   // ✅ NEW (per social account)
+
+  // 💵 Earnings rules
+  maxEarnings                 Float @default(0)   // total per USER
+  maxEarningsPerPost          Float @default(0)   // per submission
+
+  // 🔗 Relations
+  submissions     Submission[]
+  leaderboard     Leaderboard[]
+}
+/* ============================= */
+/* CAMPAIGN REQUEST */
+/* ============================= */
+
+model CampaignRequest {
+  id          String   @id @default(uuid())
+
+  name        String
+  email       String
+  company     String
+  details     String?
+
+  status      RequestStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+}
+
+/* ============================= */
+/* SUBMISSION (MAIN CORE) */
+/* ============================= */
+model Submission {
+  id            String   @id @default(uuid())
+
+  userId        String
+  campaignId    String
+  socialAccountId String   // ✅ NEW
+  user          User     @relation(fields: [userId], references: [id])
+  campaign      Campaign @relation(fields: [campaignId], references: [id])
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id])
+  videoUrl      String
+  videoId       String?
+  mediaId       String?
+  views         Int      @default(0)
+  likes         Int      @default(0)
+  comments      Int      @default(0)
+  shares        Int      @default(0)
+
+  engagementRate Float   @default(0)
+  earnings       Float   @default(0)
+
+  payoutStatus   PayoutStatus @default(PENDING)
+  status         SubmissionStatus @default(PENDING)
+
+  isVerified     Boolean @default(false)
+  isEligible     Boolean @default(false)
+
+  uniqueContentHash String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+ @@unique([campaignId, uniqueContentHash])
+  @@index([userId])
+  @@index([campaignId])
+  @@index([socialAccountId, campaignId])  
+  @@index([userId, campaignId])
+}
+/* ============================= */
+/* LEADERBOARD */
+/* ============================= */
+
+model Leaderboard {
+  id          String   @id @default(uuid())
+
+  campaignId  String
+  userId      String
+
+  totalViews  Int      @default(0)
+  totalEarnings Float  @default(0)
+  rank        Int?
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([campaignId, userId])
+}
+
+/* ============================= */
+/* WALLET */
+/* ============================= */
+
+model Transaction {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  amount    Float
+  type TransactionType
+  status    String   @default("SUCCESS")
+
+  createdAt DateTime @default(now())
+}
+
+model PaymentMethod {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  upiId     String   // e.g. aditya@upi
+  provider  String   // GPay / PhonePe / Paytm
+
+  isDefault Boolean  @default(true)
+   
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+model Withdrawal {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  amount    Float
+  upiId     String
+
+  status    String   @default("PENDING") // PENDING / APPROVED / PAID
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
