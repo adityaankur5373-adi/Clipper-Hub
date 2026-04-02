@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 
 export default function MainLayout() {
   return (
-    <div className=" bg-gradient-to-br from-[#5de0e6] to-[#004aad] min-h-screen">
+    <div className=" bg-gradient-to-br bg-pink-100 min-h-screen">
       
       <Navbar />
 

@@ -6,9 +6,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full z-50 
-   bg-white/10 backdrop-blur-xl border-b border-white/20">
-
+<nav className="fixed top-0 w-full z-50 
+bg-pink-100 text-pink-900 shadow-sm">
       {/* 🔹 Container */}
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
