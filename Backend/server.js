@@ -14,9 +14,24 @@ dotenv.config();
 const app = express();
 
 // 🔥 CORS (IMPORTANT for cookies)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://clipper-hub-three.vercel.app",
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: function (origin, callback) {
+      // allow Postman / server-to-server
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
