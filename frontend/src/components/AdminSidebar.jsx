@@ -1,7 +1,7 @@
 import { Home, Users, Inbox, Wallet, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
+import toast from "react-hot-toast";
 export default function AdminSidebar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
