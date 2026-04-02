@@ -134,7 +134,7 @@ export default function AuthPage() {
         <div className="flex items-center gap-3 mb-6">
           <Link to="/">
             <h1 className="text-2xl sm:text-[35px] font-serif text-pink-900">
-              Clipster Hub
+              Clipper Hub
             </h1>
           </Link>
         </div>
