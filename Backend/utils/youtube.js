@@ -7,7 +7,7 @@ export const getYouTubeVideoDetails = async (videoId) => {
 
   const res = await axios.get(url, {
     params: {
-      part: "snippet",
+      part: "statistics", // 🔥 FIXED
       id: videoId,
       key: API_KEY,
     },
@@ -17,5 +17,12 @@ export const getYouTubeVideoDetails = async (videoId) => {
     throw new Error("Invalid video");
   }
 
-  return res.data.items[0].snippet;
+  const stats = res.data.items[0].statistics;
+
+  return {
+    views: Number(stats.viewCount) || 0,
+    likes: Number(stats.likeCount) || 0,
+    comments: Number(stats.commentCount) || 0,
+    shares: 0 // YouTube API doesn’t provide shares
+  };
 };
