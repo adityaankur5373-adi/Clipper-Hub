@@ -14,7 +14,7 @@ const navItems = [
 { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
 { name: "Users", icon: <Users size={18} />, path: "/admin/users" },
 { name: "Submissions", icon: <Inbox size={18} />, path: "/admin/submission" },
-{ name: "Withdrawal", icon: <Wallet size={18} />, path: "/admin/withdrawal" },
+{ name: "Withdrawal", icon: <Wallet size={18} />, path: "/admin/withdrawl" },
 ];
 
 const handleLogout = async () => {
