@@ -10,7 +10,7 @@ import paymentRoutes from "./routes/paymentRoutes.js"
 import walletRoutes from "./routes/wallet.routes.js";
 import submitRoutes from "./routes/submitRoutes.js"
 dotenv.config();
-
+import "./cron/youtubeCron.js";
 const app = express();
 
 // 🔥 CORS (IMPORTANT for cookies)
