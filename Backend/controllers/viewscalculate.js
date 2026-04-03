@@ -136,22 +136,28 @@ export const updateInstagramStats = async (req, res) => {
     });
 
     const totalEarned = userTotal._sum.earnings || 0;
+let finalPayable = payable;
 
-    let finalPayable = payable;
+if (sub.campaign.maxEarnings > 0) {
+  const remainingUserLimit =
+    sub.campaign.maxEarnings - totalEarned;
 
-    if (sub.campaign.maxEarnings > 0) {
-      const remainingUserLimit =
-        sub.campaign.maxEarnings - totalEarned;
+  // 🔥 ADD THIS CHECK (VERY IMPORTANT)
+  if (remainingUserLimit <= 0) {
+    return res.status(400).json({
+      message: "User reached max earnings limit"
+    });
+  }
 
-      finalPayable = Math.min(payable, remainingUserLimit);
-    }
+  finalPayable = Math.min(payable, remainingUserLimit);
+}
 
-    if (finalPayable <= 0) {
-      return res.status(400).json({
-        message: "User reached max earnings limit"
-      });
-    }
-
+// 🔥 EXTRA SAFETY (protect against negative or zero)
+if (finalPayable <= 0) {
+  return res.status(400).json({
+    message: "No payable amount"
+  });
+}
     /* ============================= */
     /* TRANSACTION */
     /* ============================= */
@@ -170,7 +176,7 @@ export const updateInstagramStats = async (req, res) => {
           }
         }
       }),
-
+     
       prisma.user.update({
         where: { id: sub.userId },
         data: {
@@ -235,112 +241,142 @@ cron.schedule("*/10 * * * *", async () => {
   });
 
   for (const sub of submissions) {
-    if (sub.socialAccount.platform !== "YOUTUBE") continue;
+    try {
+      if (sub.socialAccount.platform !== "YOUTUBE") continue;
 
-    const stats = await getYouTubeVideoDetails(sub.videoId);
-    if (!stats) continue;
+      const stats = await getYouTubeVideoDetails(sub.videoId);
+      if (!stats) continue;
 
-    const { views, likes, comments, shares } = stats;
+      const { views, likes, comments, shares } = stats;
 
-    const previousViews = sub.views || 0;
+      const previousViews = sub.views || 0;
 
-    // ❌ prevent decreasing views
-    if (views < previousViews) continue;
+      // ❌ prevent decreasing views
+      if (views < previousViews) continue;
 
-    // ❌ prevent duplicate update
-    if (views === previousViews) continue;
+      // ❌ prevent duplicate update
+      if (views === previousViews) continue;
 
-    const engagementRate =
-      views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
+      const engagementRate =
+        views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
 
-    // 🔥 Anti-bot
-    if (engagementRate < 0.5) continue;
+      // 🔥 Anti-bot
+      if (engagementRate < 0.5) continue;
 
-    const growth = views - previousViews;
+      const growth = views - previousViews;
 
-    if (growth > 100000) continue;
+      // 🔥 spike protection
+      if (growth > 100000) continue;
 
-    let raw =
-      (views / 1_000_000) * sub.campaign.ratePerMillion;
+      /* ============================= */
+      /* EARNINGS */
+      /* ============================= */
 
-    // ✅ round earnings
-    raw = Number(raw.toFixed(2));
+      let raw =
+        (views / 1_000_000) * sub.campaign.ratePerMillion;
 
-    if (sub.campaign.maxEarningsPerPost > 0) {
-      raw = Math.min(raw, sub.campaign.maxEarningsPerPost);
-    }
+      raw = Number(raw.toFixed(2));
 
-    const old = sub.earnings || 0;
-    const diff = raw - old;
+      if (sub.campaign.maxEarningsPerPost > 0) {
+        raw = Math.min(raw, sub.campaign.maxEarningsPerPost);
+      }
 
-    if (diff <= 0) continue;
+      const old = sub.earnings || 0;
+      const diff = raw - old;
 
-    let payable = Math.min(diff, sub.campaign.remainingBudget);
+      // ❌ no new earnings
+      if (diff <= 0) continue;
 
-    if (payable <= 0) continue;
+      let payable = Math.min(diff, sub.campaign.remainingBudget);
 
-    // ✅ max per user
-    const userTotal = await prisma.submission.aggregate({
-      where: {
-        userId: sub.userId,
-        campaignId: sub.campaignId
-      },
-      _sum: { earnings: true }
-    });
+      // ❌ no campaign budget
+      if (payable <= 0) continue;
 
-    const totalEarned = userTotal._sum.earnings || 0;
+      /* ============================= */
+      /* MAX PER USER */
+      /* ============================= */
 
-    if (sub.campaign.maxEarnings > 0) {
-      const remainingUserLimit =
-        sub.campaign.maxEarnings - totalEarned;
-      payable = Math.min(payable, remainingUserLimit);
-    }
-    if (payable <= 0) continue;
-
-    await prisma.$transaction([
-      prisma.submission.update({
-        where: { id: sub.id },
-        data: {
-          views,
-          likes,
-          comments,
-          shares,
-          engagementRate,
-          earnings: {
-            increment: payable
-          }
-        }
-      }),
-
-      prisma.user.update({
-        where: { id: sub.userId },
-        data: {
-          balance: {
-            increment: payable
-          }
-        }
-      }),
-
-      prisma.campaign.update({
-        where: { id: sub.campaignId },
-        data: {
-          remainingBudget: {
-            decrement: payable
-          }
-        }
-      })
-    ]);
-
-    const updatedCampaign = await prisma.campaign.findUnique({
-      where: { id: sub.campaignId }
-    });
-
-    if (updatedCampaign.remainingBudget <= 0) {
-      await prisma.campaign.update({
-        where: { id: sub.campaignId },
-        data: { status: "COMPLETED" }
+      const userTotal = await prisma.submission.aggregate({
+        where: {
+          userId: sub.userId,
+          campaignId: sub.campaignId
+        },
+        _sum: { earnings: true }
       });
+
+      const totalEarned = userTotal._sum.earnings || 0;
+
+      if (sub.campaign.maxEarnings > 0) {
+        const remainingUserLimit =
+          sub.campaign.maxEarnings - totalEarned;
+
+        // 🔥 FIX: prevent negative limit
+        if (remainingUserLimit <= 0) continue;
+
+        payable = Math.min(payable, remainingUserLimit);
+      }
+
+      // 🔥 FINAL SAFETY (VERY IMPORTANT)
+      if (payable <= 0) continue;
+
+      /* ============================= */
+      /* TRANSACTION */
+      /* ============================= */
+
+      await prisma.$transaction([
+        prisma.submission.update({
+          where: { id: sub.id },
+          data: {
+            views,
+            likes,
+            comments,
+            shares,
+            engagementRate,
+            earnings: {
+              increment: payable
+            }
+          }
+        }),
+
+        prisma.user.update({
+          where: { id: sub.userId },
+          data: {
+            balance: {
+              increment: payable
+            }
+          }
+        }),
+
+        prisma.campaign.update({
+          where: { id: sub.campaignId },
+          data: {
+            remainingBudget: {
+              decrement: payable
+            }
+          }
+        })
+      ]);
+
+      /* ============================= */
+      /* CLOSE CAMPAIGN */
+      /* ============================= */
+
+      const updatedCampaign = await prisma.campaign.findUnique({
+        where: { id: sub.campaignId }
+      });
+
+      if (updatedCampaign.remainingBudget <= 0) {
+        await prisma.campaign.update({
+          where: { id: sub.campaignId },
+          data: { status: "COMPLETED" }
+        });
+      }
+
+    } catch (err) {
+      console.error(`❌ Error processing submission ${sub.id}:`, err);
+      continue; // don't break loop
     }
   }
+
   console.log("✅ YouTube Cron Done");
 });
