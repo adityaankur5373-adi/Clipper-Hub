@@ -246,9 +246,12 @@ cron.schedule("*/10 * * * *", async () => {
 
       const stats = await getYouTubeVideoDetails(sub.videoId);
       if (!stats) continue;
-
+         if (!stats) {
+  console.log("❌ No stats for:", sub.videoId);
+  continue;
+}
       const { views, likes, comments, shares } = stats;
-
+           
       const previousViews = sub.views || 0;
 
       // ❌ prevent decreasing views
@@ -261,7 +264,7 @@ cron.schedule("*/10 * * * *", async () => {
         views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
 
       // 🔥 Anti-bot
-      if (engagementRate < 0.5) continue;
+      if (engagementRate < 0.1) continue;
 
       const growth = views - previousViews;
 
