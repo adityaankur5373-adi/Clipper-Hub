@@ -75,7 +75,7 @@ export default function Campaigns() {
         <div className="flex justify-center mt-10">
           <button
             onClick={() => navigate("/login")}
-            className="px-6 py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full font-medium text-sm sm:text-base hover:opacity-90 transition"
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full font-medium hover:opacity-90 transition"
           >
             Start Earning
           </button>

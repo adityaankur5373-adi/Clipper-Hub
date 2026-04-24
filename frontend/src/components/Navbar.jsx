@@ -6,35 +6,39 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-<nav className="fixed top-0 w-full z-50 
-bg-pink-100 text-pink-900 shadow-sm">
+<nav className="fixed top-0 w-full z-50 h-16 
+bg-indigo-100/80 backdrop-blur-md text-indigo-900 shadow-sm">
       {/* 🔹 Container */}
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+   <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
 
         {/* 🔹 Logo */}
-        <div 
-          className="flex items-center gap-3 cursor-pointer"
-          onClick={() => navigate("/")}
-        >
-          <div className="w-7 h-7 bg-gradient-to-br from-pink-500 to-red-500 rounded-sm"></div>
-          <h1 className="text-xl font-semibold tracking-wide text-gray-800">
-            CLIPPER HUB
-          </h1>
-        </div>
+       <div 
+  className="flex items-center gap-3 cursor-pointer"
+  onClick={() => navigate("/")}
+>
+ <img 
+  src="/Logo_ClipperHub.jpg.jpeg" 
+  alt="Clipper Hub Logo"
+  className="h-10 w-auto object-contain"
+/>
+  <h1 className="text-xl font-semibold tracking-wide text-indigo-900">
+    CLIPPER HUB
+  </h1>
+</div>
 
         {/* 🔹 Desktop Buttons */}
         <div className="hidden md:flex items-center gap-6">
 
           <button
             onClick={() => navigate("/launch")}
-            className="px-5 py-2 border border-gray-300 rounded-full text-sm text-gray-700 hover:bg-gray-100 transition"
+            className="px-5 py-2 border border-indigo-300 rounded-full text-sm text-indigo-700 hover:bg-indigo-100 transition"
           >
             Launch campaign
           </button>
 
           <button
             onClick={() => navigate("/login")}
-            className="px-6 py-2 bg-gradient-to-r from-pink-500 to-red-500 rounded-full text-sm font-medium text-white hover:opacity-90 transition"
+            className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-sm font-medium text-white hover:opacity-90 transition"
           >
             Join as creator
           </button>
@@ -45,7 +49,7 @@ bg-pink-100 text-pink-900 shadow-sm">
         <div className="md:hidden">
           <button 
             onClick={() => setMenuOpen(!menuOpen)} 
-            className="text-xl text-gray-800"
+            className="text-xl text-indigo-900"
           >
             {menuOpen ? "✖" : "☰"}
           </button>
@@ -62,7 +66,7 @@ bg-pink-100 text-pink-900 shadow-sm">
               navigate("/launch");
               setMenuOpen(false);
             }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-full text-sm text-gray-700"
+            className="w-full px-4 py-2 border border-indigo-300 rounded-full text-sm text-indigo-700"
           >
             Launch campaign
           </button>
@@ -72,7 +76,7 @@ bg-pink-100 text-pink-900 shadow-sm">
               navigate("/login");
               setMenuOpen(false);
             }}
-            className="w-full px-5 py-2 bg-gradient-to-r from-pink-500 to-red-500 rounded-full text-sm font-medium text-white"
+            className="w-full px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-sm font-medium text-white"
           >
             Join as creator
           </button>

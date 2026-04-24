@@ -2,7 +2,7 @@ import { Instagram, Linkedin, Twitter } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="w-full mt-16 bg-gradient-to-br from-pink-100 via-pink-50 to-white text-gray-800">
+    <footer className="w-full mt-16 bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-50 text-indigo-900">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
@@ -45,7 +45,7 @@ export default function Footer() {
 
           {/* 🔹 Legal */}
           <div>
-            <h3 className="font-semibold mb-3">Legal</h3>
+            <h3 className="font-semibold mb-3 text-indigo-800">Legal</h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>Privacy Policy</li>
               <li>Creator Terms</li>
@@ -56,7 +56,7 @@ export default function Footer() {
 
           {/* 🔹 Company */}
           <div>
-            <h3 className="font-semibold mb-3">Company</h3>
+            <h3 className="font-semibold mb-3 text-indigo-800">Company</h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>Contact Us</li>
               <li>Support</li>
@@ -66,7 +66,7 @@ export default function Footer() {
 
           {/* 🔹 Resources */}
           <div>
-            <h3 className="font-semibold mb-3">Resources</h3>
+            <h3 className="font-semibold mb-3 text-indigo-800">Resources</h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>Campaign Rules</li>
               <li>Community</li>
@@ -83,10 +83,10 @@ export default function Footer() {
           </p>
 
           {/* 🔹 Social Icons */}
-          <div className="flex gap-4 text-gray-600">
-            <Instagram size={18} />
-            <Twitter size={18} />
-            <Linkedin size={18} />
+          <div className="flex gap-4 text-indigo-700">
+            <Instagram size={18} className="hover:text-indigo-500 cursor-pointer" />
+            <Twitter size={18} className="hover:text-indigo-500 cursor-pointer" />
+            <Linkedin size={18} className="hover:text-indigo-500 cursor-pointer" />
           </div>
 
         </div>

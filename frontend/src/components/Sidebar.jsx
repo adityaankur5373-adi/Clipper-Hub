@@ -31,10 +31,10 @@ export default function Sidebar() {
   return (
     <>
       {/* ================= MOBILE TOP BAR ================= */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-pink-100 flex justify-between items-center p-3 shadow z-50">
-        <h1 className="font-semibold">Dashboard</h1>
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white flex justify-between items-center p-3 shadow z-50">
+        <h1 className="font-semibold text-gray-900">Dashboard</h1>
 
-        <button onClick={() => setOpen(true)}>
+        <button onClick={() => setOpen(true)} className="text-gray-800">
           <Menu />
         </button>
       </div>
@@ -46,8 +46,15 @@ export default function Sidebar() {
       >
         {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="font-bold">Clipster</h2>
-          <button onClick={() => setOpen(false)}>
+          <div className="flex items-center gap-2">
+            <img 
+              src="/Logo_ClipperHub.jpg.jpeg" 
+              alt="Logo"
+              className="h-8 w-auto object-contain"
+            />
+            <h2 className="font-bold text-gray-900">Clipper Hub</h2>
+          </div>
+          <button onClick={() => setOpen(false)} className="text-gray-800">
             <X />
           </button>
         </div>
@@ -63,7 +70,7 @@ export default function Sidebar() {
               }}
               className={`flex items-center gap-3 w-full p-2 rounded-lg ${
                 location.pathname === item.path
-                  ? "bg-pink-500 text-white"
+                  ? "bg-gray-900 text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -92,13 +99,19 @@ export default function Sidebar() {
       )}
 
       {/* ================= DESKTOP SIDEBAR ================= */}
-      <div className="hidden md:flex fixed top-0 left-0 h-screen w-16 bg-pink-100 flex-col items-center py-6 gap-6 shadow-sm z-50 border-r border-pink-200">
+      <div className="hidden md:flex fixed top-0 left-0 h-screen w-16 bg-white flex-col items-center py-6 gap-6 shadow-sm z-50 border-r border-gray-200">
 
         {/* Logo */}
         <div
-          onClick={() => navigate("/dashboard")}
-          className="w-10 h-10 bg-pink-500 rounded-md cursor-pointer"
-        />
+          onClick={() => navigate("/")}
+          className="cursor-pointer"
+        >
+          <img 
+            src="/Logo_ClipperHub.jpg.jpeg" 
+            alt="Logo"
+            className="h-10 w-auto object-contain"
+          />
+        </div>
 
         {/* Nav Icons */}
         {navItems.map((item, i) => (
@@ -107,8 +120,8 @@ export default function Sidebar() {
             onClick={() => navigate(item.path)}
             className={`p-3 rounded-xl transition ${
               location.pathname === item.path
-                ? "bg-pink-500 text-white"
-                : "text-pink-700 hover:bg-pink-200"
+                ? "bg-gray-900 text-white"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             {item.icon}
