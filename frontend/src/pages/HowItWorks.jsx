@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
+
 export default function HowItWorks() {
+  const navigate = useNavigate();
+
   return (
     <section className="w-full py-12 sm:py-16">
-
       <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
 
         {/* 🔹 Heading */}
@@ -18,15 +21,12 @@ export default function HowItWorks() {
 
           {/* 🔹 Step 1 */}
           <div className="flex flex-col items-center">
-
-            {/* FULL SVG */}
             <img
-              src="https://www.clipster.gg/onboarding/link-account.svg"
+              src="/step1.jpeg"
               alt="link account"
-              className="w-full max-w-[320px] h-auto object-contain"
+              className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
-            {/* Text */}
             <h3 className="mt-5 text-lg font-semibold text-gray-900">
               Link account
             </h3>
@@ -34,16 +34,14 @@ export default function HowItWorks() {
             <p className="text-sm text-gray-600 mt-2 max-w-xs">
               Connect your social accounts to verify ownership.
             </p>
-
           </div>
 
           {/* 🔹 Step 2 */}
           <div className="flex flex-col items-center">
-
             <img
-              src="https://www.clipster.gg/onboarding/submit-content.svg"
+              src="/stp2.jpeg"
               alt="submit content"
-              className="w-full max-w-[320px] h-auto object-contain"
+              className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
             <h3 className="mt-5 text-lg font-semibold text-gray-900">
@@ -53,16 +51,14 @@ export default function HowItWorks() {
             <p className="text-sm text-gray-600 mt-2 max-w-xs">
               Post videos and submit links to track performance.
             </p>
-
           </div>
 
           {/* 🔹 Step 3 */}
           <div className="flex flex-col items-center">
-
             <img
-              src="https://www.clipster.gg/onboarding/get-paid.svg"
+              src="/step3.jpeg"
               alt="get paid"
-              className="w-full max-w-[320px] h-auto object-contain"
+              className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
             <h3 className="mt-5 text-lg font-semibold text-gray-900">
@@ -72,18 +68,16 @@ export default function HowItWorks() {
             <p className="text-sm text-gray-600 mt-2 max-w-xs">
               Earn automatically based on your performance.
             </p>
-
           </div>
-
         </div>
 
         {/* 🔥 CTA */}
         <div className="mt-10">
-           <button
+          <button
             onClick={() => navigate("/login")}
-             className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full font-medium hover:opacity-90 transition"
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full font-medium hover:opacity-90 transition"
           >
-            Start Earning 
+            Start Earning
           </button>
         </div>
 
