@@ -27,7 +27,7 @@ export default function HowItWorks() {
               className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
-            <h3 className="mt-5 text-lg font-semibold text-gray-900">
+            <h3 className="mt-5 text-lg font-bold text-gray-900">
               Link account
             </h3>
 
@@ -44,7 +44,7 @@ export default function HowItWorks() {
               className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
-            <h3 className="mt-5 text-lg font-semibold text-gray-900">
+            <h3 className="mt-5 text-lg font-bold text-gray-900">
               Submit content
             </h3>
 
@@ -61,7 +61,7 @@ export default function HowItWorks() {
               className="w-full max-w-[320px] sm:max-w-[360px] md:max-w-[400px] h-auto object-contain"
             />
 
-            <h3 className="mt-5 text-lg font-semibold text-gray-900">
+            <h3 className="mt-5 text-lg font-bold text-gray-900">
               Get paid
             </h3>
 

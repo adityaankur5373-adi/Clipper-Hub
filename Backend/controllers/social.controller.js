@@ -9,7 +9,7 @@ import axios from "axios"
 /* 🔐 GENERATE CODE */
 /* ============================= */
 function generateCode() {
-  return "CLIPSTER-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  return "CLIPPERHUB-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 /* ============================= */
@@ -90,12 +90,14 @@ if (platform === "YOUTUBE") {
     );
 
     if (ytRes.data.items.length > 0) {
-      channelId = ytRes.data.items[0].snippet.channelId;
+      channelId = ytRes.data.items[0].id.channelId;
     }
+     console.log("Saved Channel ID:", channelId);
   } catch (err) {
     console.error("YOUTUBE CHANNEL FETCH ERROR:", err.message);
   }
 }
+
     const platformUserId = `${platform}_${username}`;
 
     /* ============================= */
