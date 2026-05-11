@@ -2,7 +2,6 @@ import cron from "node-cron";
 import prisma from "../prisma/client.js";
 import { getYouTubeVideoDetails } from "../utils/youtube.js";
 
-
 cron.schedule("*/10 * * * *", async () => {
   console.log("🚀 Running YouTube Cron...");
 
@@ -24,13 +23,14 @@ cron.schedule("*/10 * * * *", async () => {
       if (sub.socialAccount.platform !== "YOUTUBE") continue;
 
       const stats = await getYouTubeVideoDetails(sub.videoId);
-     
-         if (!stats) {
-  console.log("❌ No stats for:", sub.videoId);
-  continue;
-}
+
+      if (!stats) {
+        console.log("❌ No stats for:", sub.videoId);
+        continue;
+      }
+
       const { views, likes, comments, shares } = stats;
-           
+
       const previousViews = sub.views || 0;
 
       // ❌ prevent decreasing views
@@ -40,22 +40,31 @@ cron.schedule("*/10 * * * *", async () => {
       if (views === previousViews) continue;
 
       const engagementRate =
-        views > 0 ? ((likes + comments + shares) / views) * 100 : 0;
+        views > 0
+          ? ((likes + comments + shares) / views) * 100
+          : 0;
 
       // 🔥 Anti-bot
       if (engagementRate < 0.1) continue;
 
       const growth = views - previousViews;
 
-      // 🔥 spike protection
-      if (growth > 100000) continue;
+      // 🔥 Allow viral videos but block unrealistic spikes
+      if (growth > 5000000) {
+        console.log("⚠️ Suspicious spike:", growth);
+        continue;
+      }
 
       /* ============================= */
       /* EARNINGS */
       /* ============================= */
 
+      // ✅ ONLY PAY FOR NEW VIEWS
+      const newViews = views - previousViews;
+
       let raw =
-        (views / 1_000_000) * sub.campaign.ratePerMillion;
+        (newViews / 1_000_000) *
+        sub.campaign.ratePerMillion;
 
       raw = Number(raw.toFixed(2));
 
@@ -64,12 +73,15 @@ cron.schedule("*/10 * * * *", async () => {
       }
 
       const old = sub.earnings || 0;
-      const diff = raw - old;
+      const diff = raw;
 
       // ❌ no new earnings
       if (diff <= 0) continue;
 
-      let payable = Math.min(diff, sub.campaign.remainingBudget);
+      let payable = Math.min(
+        diff,
+        sub.campaign.remainingBudget
+      );
 
       // ❌ no campaign budget
       if (payable <= 0) continue;
@@ -92,14 +104,22 @@ cron.schedule("*/10 * * * *", async () => {
         const remainingUserLimit =
           sub.campaign.maxEarnings - totalEarned;
 
-        // 🔥 FIX: prevent negative limit
+        // 🔥 prevent negative limit
         if (remainingUserLimit <= 0) continue;
 
         payable = Math.min(payable, remainingUserLimit);
       }
 
-      // 🔥 FINAL SAFETY (VERY IMPORTANT)
+      // 🔥 FINAL SAFETY
       if (payable <= 0) continue;
+
+      console.log({
+        video: sub.videoId,
+        previousViews,
+        currentViews: views,
+        growth,
+        payable
+      });
 
       /* ============================= */
       /* TRANSACTION */
@@ -155,8 +175,11 @@ cron.schedule("*/10 * * * *", async () => {
       }
 
     } catch (err) {
-      console.error(`❌ Error processing submission ${sub.id}:`, err);
-      continue; // don't break loop
+      console.error(
+        `❌ Error processing submission ${sub.id}:`,
+        err
+      );
+      continue;
     }
   }
 

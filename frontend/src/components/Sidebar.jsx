@@ -4,6 +4,8 @@ import { useAuthStore } from "../store/authStore";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+
+
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,11 +49,16 @@ export default function Sidebar() {
         {/* HEADER */}
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center gap-2">
-            <img 
-              src="/Logo_ClipperHub.jpg.jpeg" 
-              alt="Logo"
-              className="h-8 w-auto object-contain"
-            />
+            <div
+          onClick={() => navigate("/")}
+          className="cursor-pointer"
+        >
+          <img 
+            src="/Logo_ClipperHub.jpg.jpeg" 
+            alt="Logo"
+            className="h-10 w-auto object-contain"
+          />
+        </div>
             <h2 className="font-bold text-gray-900">Clipper Hub</h2>
           </div>
           <button onClick={() => setOpen(false)} className="text-gray-800">
