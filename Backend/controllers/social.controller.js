@@ -16,7 +16,17 @@ function generateCode() {
 /* 🔧 EXTRACT USERNAME */
 /* ============================= */
 function extractUsername(url) {
-  return url.replace(/\/$/, "").split("/").pop();
+  const cleanUrl = url.replace(/\/$/, "");
+
+  // @handle
+  const handleMatch = cleanUrl.match(/youtube\.com\/@([^\/]+)/);
+  if (handleMatch) return handleMatch[1];
+
+  // /channel/
+  const channelMatch = cleanUrl.match(/youtube\.com\/channel\/([^\/]+)/);
+  if (channelMatch) return channelMatch[1];
+
+  return cleanUrl.split("/").pop();
 }
 
 /* ============================= */
@@ -76,23 +86,27 @@ let channelId = null;
 
 if (platform === "YOUTUBE") {
   try {
+
+    // remove @ if exists
+    const handle = username.replace("@", "");
+
     const ytRes = await axios.get(
-      "https://www.googleapis.com/youtube/v3/search",
+      "https://www.googleapis.com/youtube/v3/channels",
       {
         params: {
-          part: "snippet",
-          q: username,
-          type: "channel",
-          maxResults: 1,
-          key: process.env.YOUTUBE_API_KEY
-        }
+          part: "id",
+          forHandle: handle,
+          key: process.env.YOUTUBE_API_KEY,
+        },
       }
     );
 
     if (ytRes.data.items.length > 0) {
-      channelId = ytRes.data.items[0].id.channelId;
+      channelId = ytRes.data.items[0].id;
     }
-     console.log("Saved Channel ID:", channelId);
+
+    console.log("Saved Channel ID:", channelId);
+
   } catch (err) {
     console.error("YOUTUBE CHANNEL FETCH ERROR:", err.message);
   }
