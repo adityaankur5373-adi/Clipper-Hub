@@ -2,186 +2,404 @@ import cron from "node-cron";
 import prisma from "../prisma/client.js";
 import { getYouTubeVideoDetails } from "../utils/youtube.js";
 
+/* ========================================= */
+/* YOUTUBE CRON */
+/* Runs every 10 minutes */
+/* ========================================= */
+
 cron.schedule("*/10 * * * *", async () => {
+
   console.log("🚀 Running YouTube Cron...");
 
-  const submissions = await prisma.submission.findMany({
-    where: {
-      status: "APPROVED",
-      isVerified: true,
-      isEligible: true,
-      videoId: { not: null }
-    },
-    include: {
-      campaign: true,
-      socialAccount: true
-    }
-  });
+  try {
 
-  for (const sub of submissions) {
-    try {
-      if (sub.socialAccount.platform !== "YOUTUBE") continue;
+    /* ========================================= */
+    /* FETCH VALID SUBMISSIONS */
+    /* ========================================= */
 
-      const stats = await getYouTubeVideoDetails(sub.videoId);
+    const submissions = await prisma.submission.findMany({
+      where: {
+        status: "APPROVED",
+        isVerified: true,
+        isEligible: true,
+        videoId: {
+          not: null
+        }
+      },
 
-      if (!stats) {
-        console.log("❌ No stats for:", sub.videoId);
-        continue;
+      include: {
+        campaign: true,
+        socialAccount: true
       }
+    });
 
-      const { views, likes, comments, shares } = stats;
+    /* ========================================= */
+    /* LOOP THROUGH SUBMISSIONS */
+    /* ========================================= */
 
-      const previousViews = sub.views || 0;
+    for (const sub of submissions) {
 
-      // ❌ prevent decreasing views
-      if (views < previousViews) continue;
+      try {
 
-      // ❌ prevent duplicate update
-      if (views === previousViews) continue;
+        /* ========================================= */
+        /* ONLY YOUTUBE */
+        /* ========================================= */
 
-      const engagementRate =
-        views > 0
-          ? ((likes + comments + shares) / views) * 100
-          : 0;
+        if (sub.socialAccount.platform !== "YOUTUBE") {
+          continue;
+        }
 
-      // 🔥 Anti-bot
-      if (engagementRate < 0.1) continue;
+        /* ========================================= */
+        /* GET LATEST VIDEO STATS */
+        /* ========================================= */
 
-      const growth = views - previousViews;
+        const stats = await getYouTubeVideoDetails(sub.videoId);
 
-      // 🔥 Allow viral videos but block unrealistic spikes
-      if (growth > 5000000) {
-        console.log("⚠️ Suspicious spike:", growth);
-        continue;
-      }
+        if (!stats) {
+          console.log("❌ No stats found:", sub.videoId);
+          continue;
+        }
 
-      /* ============================= */
-      /* EARNINGS */
-      /* ============================= */
+        const {
+          views,
+          likes,
+          comments,
+          shares
+        } = stats;
 
-      // ✅ ONLY PAY FOR NEW VIEWS
-      const newViews = views - previousViews;
+        /* ========================================= */
+        /* PREVIOUS SAVED VIEWS */
+        /* ========================================= */
 
-      let raw =
-        (newViews / 1_000_000) *
-        sub.campaign.ratePerMillion;
+        const previousViews = sub.views || 0;
 
-      raw = Number(raw.toFixed(2));
+        /* ========================================= */
+        /* PREVENT VIEW DROP */
+        /* ========================================= */
 
-      if (sub.campaign.maxEarningsPerPost > 0) {
-        raw = Math.min(raw, sub.campaign.maxEarningsPerPost);
-      }
+        if (views < previousViews) {
+          console.log("⚠️ Views decreased");
+          continue;
+        }
 
-      const old = sub.earnings || 0;
-      const diff = raw;
+        /* ========================================= */
+        /* NO NEW VIEWS */
+        /* ========================================= */
 
-      // ❌ no new earnings
-      if (diff <= 0) continue;
+        if (views === previousViews) {
+          continue;
+        }
 
-      let payable = Math.min(
-        diff,
-        sub.campaign.remainingBudget
-      );
+        /* ========================================= */
+        /* ENGAGEMENT RATE */
+        /* ========================================= */
 
-      // ❌ no campaign budget
-      if (payable <= 0) continue;
+        const engagementRate =
+          views > 0
+            ? (
+                (likes + comments + shares) / views
+              ) * 100
+            : 0;
 
-      /* ============================= */
-      /* MAX PER USER */
-      /* ============================= */
+        /* ========================================= */
+        /* ANTI BOT CHECK */
+        /* ========================================= */
 
-      const userTotal = await prisma.submission.aggregate({
-        where: {
-          userId: sub.userId,
-          campaignId: sub.campaignId
-        },
-        _sum: { earnings: true }
-      });
+        if (engagementRate < 0.1) {
+          console.log("⚠️ Low engagement");
+          continue;
+        }
 
-      const totalEarned = userTotal._sum.earnings || 0;
+        /* ========================================= */
+        /* VIEW GROWTH */
+        /* ========================================= */
 
-      if (sub.campaign.maxEarnings > 0) {
-        const remainingUserLimit =
-          sub.campaign.maxEarnings - totalEarned;
+        const growth = views - previousViews;
 
-        // 🔥 prevent negative limit
-        if (remainingUserLimit <= 0) continue;
+        /* ========================================= */
+        /* SUSPICIOUS GROWTH CHECK */
+        /* ========================================= */
 
-        payable = Math.min(payable, remainingUserLimit);
-      }
+        if (growth > 5000000) {
+          console.log("⚠️ Suspicious spike:", growth);
+          continue;
+        }
 
-      // 🔥 FINAL SAFETY
-      if (payable <= 0) continue;
+        /* ========================================= */
+        /* NEW VIEWS */
+        /* ========================================= */
 
-      console.log({
-        video: sub.videoId,
-        previousViews,
-        currentViews: views,
-        growth,
-        payable
-      });
+        const newViews = growth;
 
-      /* ============================= */
-      /* TRANSACTION */
-      /* ============================= */
+        /* ========================================= */
+        /* CALCULATE NEW EARNING */
+        /* ========================================= */
 
-      await prisma.$transaction([
-        prisma.submission.update({
-          where: { id: sub.id },
-          data: {
-            views,
-            likes,
-            comments,
-            shares,
-            engagementRate,
-            earnings: {
-              increment: payable
+        let newEarning =
+          (newViews / 1_000_000) *
+          sub.campaign.ratePerMillion;
+
+        /* ========================================= */
+        /* ROUND TO 2 DECIMALS */
+        /* ========================================= */
+
+        newEarning = Number(
+          newEarning.toFixed(2)
+        );
+
+        /* ========================================= */
+        /* INVALID NUMBER CHECK */
+        /* ========================================= */
+
+        if (isNaN(newEarning)) {
+          console.log("❌ Invalid earning");
+          continue;
+        }
+
+        /* ========================================= */
+        /* OLD EARNINGS */
+        /* ========================================= */
+
+        const oldEarnings =
+          sub.earnings || 0;
+
+        /* ========================================= */
+        /* TOTAL EARNINGS AFTER UPDATE */
+        /* ========================================= */
+
+        let totalEarnings =
+          oldEarnings + newEarning;
+
+        /* ========================================= */
+        /* MAX PER POST LIMIT */
+        /* ========================================= */
+
+        if (
+          sub.campaign.maxEarningsPerPost > 0
+        ) {
+
+          totalEarnings = Math.min(
+            totalEarnings,
+            sub.campaign.maxEarningsPerPost
+          );
+        }
+
+        /* ========================================= */
+        /* ACTUAL PAYABLE */
+        /* ========================================= */
+
+        let payable = Number(
+          (
+            totalEarnings - oldEarnings
+          ).toFixed(2)
+        );
+
+        /* ========================================= */
+        /* NO PAYABLE */
+        /* ========================================= */
+
+        if (payable <= 0) {
+          continue;
+        }
+
+        /* ========================================= */
+        /* USER TOTAL EARNINGS */
+        /* ========================================= */
+
+        const userTotal =
+          await prisma.submission.aggregate({
+            where: {
+              userId: sub.userId,
+              campaignId: sub.campaignId
+            },
+
+            _sum: {
+              earnings: true
             }
+          });
+
+        const totalEarned =
+          userTotal._sum.earnings || 0;
+
+        /* ========================================= */
+        /* MAX USER LIMIT */
+        /* ========================================= */
+
+        if (
+          sub.campaign.maxEarnings > 0
+        ) {
+
+          const remainingUserLimit =
+            sub.campaign.maxEarnings -
+            totalEarned;
+
+          if (remainingUserLimit <= 0) {
+            continue;
           }
-        }),
 
-        prisma.user.update({
-          where: { id: sub.userId },
-          data: {
-            balance: {
-              increment: payable
-            }
-          }
-        }),
+          payable = Math.min(
+            payable,
+            remainingUserLimit
+          );
+        }
 
-        prisma.campaign.update({
-          where: { id: sub.campaignId },
-          data: {
-            remainingBudget: {
-              decrement: payable
-            }
-          }
-        })
-      ]);
+        /* ========================================= */
+        /* FINAL SAFETY */
+        /* ========================================= */
 
-      /* ============================= */
-      /* CLOSE CAMPAIGN */
-      /* ============================= */
+        if (payable <= 0) {
+          continue;
+        }
 
-      const updatedCampaign = await prisma.campaign.findUnique({
-        where: { id: sub.campaignId }
-      });
-
-      if (updatedCampaign.remainingBudget <= 0) {
-        await prisma.campaign.update({
-          where: { id: sub.campaignId },
-          data: { status: "COMPLETED" }
+        console.log({
+          video: sub.videoId,
+          previousViews,
+          currentViews: views,
+          growth,
+          payable
         });
+
+        /* ========================================= */
+        /* SAFE TRANSACTION */
+        /* ========================================= */
+
+        await prisma.$transaction(
+          async (tx) => {
+
+            /* ========================================= */
+            /* GET LATEST CAMPAIGN */
+            /* ========================================= */
+
+            const latestCampaign =
+              await tx.campaign.findUnique({
+                where: {
+                  id: sub.campaignId
+                }
+              });
+
+            if (!latestCampaign) {
+              throw new Error(
+                "Campaign not found"
+              );
+            }
+
+            /* ========================================= */
+            /* PREVENT NEGATIVE BUDGET */
+            /* ========================================= */
+
+            if (
+              latestCampaign.remainingBudget <
+              payable
+            ) {
+              console.log(
+                "⚠️ Not enough budget"
+              );
+
+              return;
+            }
+
+            /* ========================================= */
+            /* UPDATE SUBMISSION */
+            /* ========================================= */
+
+            await tx.submission.update({
+              where: {
+                id: sub.id
+              },
+
+              data: {
+                views,
+                likes,
+                comments,
+                shares,
+                engagementRate,
+
+                earnings: {
+                  increment: payable
+                }
+              }
+            });
+
+            /* ========================================= */
+            /* UPDATE USER BALANCE */
+            /* ========================================= */
+
+            await tx.user.update({
+              where: {
+                id: sub.userId
+              },
+
+              data: {
+                balance: {
+                  increment: payable
+                }
+              }
+            });
+
+            /* ========================================= */
+            /* UPDATE CAMPAIGN BUDGET */
+            /* ========================================= */
+
+            await tx.campaign.update({
+              where: {
+                id: sub.campaignId
+              },
+
+              data: {
+                remainingBudget: {
+                  decrement: payable
+                }
+              }
+            });
+
+          }
+        );
+
+        /* ========================================= */
+        /* CLOSE CAMPAIGN IF FINISHED */
+        /* ========================================= */
+
+        const updatedCampaign =
+          await prisma.campaign.findUnique({
+            where: {
+              id: sub.campaignId
+            }
+          });
+
+        if (
+          updatedCampaign &&
+          updatedCampaign.remainingBudget <= 0
+        ) {
+
+          await prisma.campaign.update({
+            where: {
+              id: sub.campaignId
+            },
+
+            data: {
+              status: "COMPLETED"
+            }
+          });
+        }
+
+      } catch (err) {
+
+        console.error(
+          `❌ Error processing submission ${sub.id}:`,
+          err.message
+        );
+
+        continue;
       }
-
-    } catch (err) {
-      console.error(
-        `❌ Error processing submission ${sub.id}:`,
-        err
-      );
-      continue;
     }
-  }
 
-  console.log("✅ YouTube Cron Done");
+    console.log("✅ YouTube Cron Done");
+
+  } catch (err) {
+
+    console.error(
+      "❌ CRON ERROR:",
+      err.message
+    );
+  }
 });
