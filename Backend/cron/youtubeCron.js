@@ -7,7 +7,7 @@ import { getYouTubeVideoDetails } from "../utils/youtube.js";
 /* Runs every 10 minutes */
 /* ========================================= */
 
-cron.schedule("*/10 * * * *", async () => {
+cron.schedule("* * * * *", async () => {
 
   console.log("🚀 Running YouTube Cron...");
 
