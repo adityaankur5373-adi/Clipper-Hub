@@ -196,9 +196,7 @@ export default function CampaignDetails() {
             {campaign.description}
           </p>
 
-          <p className="text-gray-600 mb-4 text-sm md:text-base">
-            {campaign.details}
-          </p>
+       
         </div>
 
         {/* LEADERBOARD */}
