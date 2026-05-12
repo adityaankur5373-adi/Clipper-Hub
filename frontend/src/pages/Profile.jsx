@@ -68,7 +68,7 @@ export default function Profile() {
                 <div className="text-left md:text-right">
                   <p className="text-sm text-gray-500">Balance</p>
                   <p className="text-2xl font-bold text-red-500">
-                    ₹{balance}
+                 ₹{Number(balance).toFixed(2)}
                   </p>
                 </div>
               </div>
