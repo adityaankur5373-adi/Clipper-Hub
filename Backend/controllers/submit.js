@@ -18,24 +18,32 @@ const extractInstagramId = (url) => {
   return match ? match[1] : null;
 };
 export const submitVideo = async (req, res) => {
+
   try {
+
     const userId = req.user?.userId;
 
     if (!userId) {
+
       return res.status(401).json({
         message: "Unauthorized"
       });
     }
 
-    const { campaignId, videoUrl } = req.body;
+    const {
+      campaignId,
+      videoUrl
+    } = req.body;
 
     /* ============================= */
     /* 1. VALIDATION */
     /* ============================= */
 
     if (!campaignId || !videoUrl) {
+
       return res.status(400).json({
-        message: "campaignId and videoUrl are required"
+        message:
+          "campaignId and videoUrl are required"
       });
     }
 
@@ -44,30 +52,51 @@ export const submitVideo = async (req, res) => {
     /* ============================= */
 
     let platform = null;
+
     let videoId = null;
+
     let mediaId = null;
 
-    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+    if (
+      videoUrl.includes("youtube.com") ||
+      videoUrl.includes("youtu.be")
+    ) {
+
       platform = "YOUTUBE";
-      videoId = extractYouTubeId(videoUrl);
+
+      videoId =
+        extractYouTubeId(videoUrl);
 
       if (!videoId) {
+
         return res.status(400).json({
-          message: "Invalid YouTube URL"
+          message:
+            "Invalid YouTube URL"
         });
       }
-    } else if (videoUrl.includes("instagram.com")) {
+
+    } else if (
+      videoUrl.includes("instagram.com")
+    ) {
+
       platform = "INSTAGRAM";
-      mediaId = extractInstagramId(videoUrl);
+
+      mediaId =
+        extractInstagramId(videoUrl);
 
       if (!mediaId) {
+
         return res.status(400).json({
-          message: "Invalid Instagram Reel URL"
+          message:
+            "Invalid Instagram Reel URL"
         });
       }
+
     } else {
+
       return res.status(400).json({
-        message: "Unsupported platform URL"
+        message:
+          "Unsupported platform URL"
       });
     }
 
@@ -75,13 +104,21 @@ export const submitVideo = async (req, res) => {
     /* 3. GET CAMPAIGN */
     /* ============================= */
 
-    const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId }
-    });
+    const campaign =
+      await prisma.campaign.findUnique({
+        where: {
+          id: campaignId
+        }
+      });
 
-    if (!campaign || campaign.status !== "ACTIVE") {
+    if (
+      !campaign ||
+      campaign.status !== "ACTIVE"
+    ) {
+
       return res.status(400).json({
-        message: "Campaign not active or not found"
+        message:
+          "Campaign not active or not found"
       });
     }
 
@@ -89,62 +126,106 @@ export const submitVideo = async (req, res) => {
     /* 4. CHECK PLATFORM ALLOWED */
     /* ============================= */
 
-    if (!campaign.allowedPlatforms.includes(platform)) {
+    if (
+      !campaign.allowedPlatforms.includes(
+        platform
+      )
+    ) {
+
       return res.status(400).json({
-        message: `Allowed platforms: ${campaign.allowedPlatforms.join(", ")}`
+        message:
+          `Allowed platforms: ${campaign.allowedPlatforms.join(", ")}`
       });
     }
 
     /* ============================= */
-    /* 5. GET VERIFIED SOCIAL ACCOUNT */
+    /* 5. AUTO DETECT SOCIAL ACCOUNT */
     /* ============================= */
-     /* ============================= */
-/* 🔒 YOUTUBE CHANNEL VERIFY */
-/* ============================= */
 
+    let social = null;
 
-    const social = await prisma.socialAccount.findFirst({
-      where: {
-        userId,
-        platform,
-        verified: true
-      }
-    });
-     
-    if (!social) {
-      return res.status(400).json({
-        message: `Verify your ${platform} account first`
-      });
-    }
+    /* ============================= */
+    /* YOUTUBE AUTO MATCH */
+    /* ============================= */
+
+    if (platform === "YOUTUBE") {
+
       /* ============================= */
-/* 🔒 YOUTUBE CHANNEL VERIFY */
-/* ============================= */
+      /* GET VIDEO DETAILS */
+      /* ============================= */
 
-if (platform === "YOUTUBE") {
-  const videoDetails = await getYouTubeVideoDetails(videoId);
+      const videoDetails =
+        await getYouTubeVideoDetails(
+          videoId
+        );
 
-  const videoChannelId = videoDetails.channelId;
+      const videoChannelId =
+        videoDetails.channelId;
 
-  // 🔥 CHECK MATCH
-  if (social.channelId && social.channelId !== videoChannelId) {
-    return res.status(400).json({
-      message: "Video does not belong to your YouTube channel"
-    });
-  }
-}
+      /* ============================= */
+      /* FIND MATCHING ACCOUNT */
+      /* ============================= */
+
+      social =
+        await prisma.socialAccount.findFirst({
+          where: {
+            userId,
+            platform: "YOUTUBE",
+            verified: true,
+            channelId: videoChannelId
+          }
+        });
+
+    } else {
+
+      /* ============================= */
+      /* INSTAGRAM NORMAL ACCOUNT */
+      /* ============================= */
+
+      social =
+        await prisma.socialAccount.findFirst({
+          where: {
+            userId,
+            platform,
+            verified: true
+          }
+        });
+    }
+
+    /* ============================= */
+    /* ACCOUNT NOT FOUND */
+    /* ============================= */
+
+    if (!social) {
+
+      return res.status(400).json({
+        message:
+          `Video does not belong to your verified ${platform} account`
+      });
+    }
+
     const socialAccountId = social.id;
 
     /* ============================= */
     /* 6. MAX SUBMISSIONS (USER) */
     /* ============================= */
 
-    const userCount = await prisma.submission.count({
-      where: { userId, campaignId }
-    });
+    const userCount =
+      await prisma.submission.count({
+        where: {
+          userId,
+          campaignId
+        }
+      });
 
-    if (userCount >= campaign.maxSubmissions) {
+    if (
+      userCount >=
+      campaign.maxSubmissions
+    ) {
+
       return res.status(400).json({
-        message: "Max submissions reached"
+        message:
+          "Max submissions reached"
       });
     }
 
@@ -152,13 +233,22 @@ if (platform === "YOUTUBE") {
     /* 7. MAX SUBMISSIONS (ACCOUNT) */
     /* ============================= */
 
-    const accountCount = await prisma.submission.count({
-      where: { campaignId, socialAccountId }
-    });
+    const accountCount =
+      await prisma.submission.count({
+        where: {
+          campaignId,
+          socialAccountId
+        }
+      });
 
-    if (accountCount >= campaign.maxSubmissionsPerAccount) {
+    if (
+      accountCount >=
+      campaign.maxSubmissionsPerAccount
+    ) {
+
       return res.status(400).json({
-        message: "Account submission limit reached"
+        message:
+          "Account submission limit reached"
       });
     }
 
@@ -166,53 +256,76 @@ if (platform === "YOUTUBE") {
     /* 8. PREVENT DUPLICATE CONTENT */
     /* ============================= */
 
-    const duplicate = await prisma.submission.findFirst({
-      where: {
-        campaignId,
-        OR: [
-          { videoUrl },
-          videoId ? { videoId } : undefined,
-          mediaId ? { mediaId } : undefined
-        ].filter(Boolean)
-      }
-    });
+    const duplicate =
+      await prisma.submission.findFirst({
+        where: {
+          campaignId,
+
+          OR: [
+
+            { videoUrl },
+
+            videoId
+              ? { videoId }
+              : undefined,
+
+            mediaId
+              ? { mediaId }
+              : undefined
+
+          ].filter(Boolean)
+        }
+      });
 
     if (duplicate) {
+
       return res.status(400).json({
-        message: "Duplicate video submission"
+        message:
+          "Duplicate video submission"
       });
     }
+
     /* ============================= */
     /* 9. CREATE SUBMISSION */
     /* ============================= */
 
-    const submission = await prisma.submission.create({
-      data: {
-        userId,
-        campaignId,
-        socialAccountId,
-        videoUrl,
-        videoId,
-        mediaId,
-        status: "PENDING",
-        isVerified: false,
-        isEligible: false
-      }
-    });
+    const submission =
+      await prisma.submission.create({
+        data: {
+          userId,
+          campaignId,
+          socialAccountId,
+          videoUrl,
+          videoId,
+          mediaId,
+          status: "PENDING",
+          isVerified: false,
+          isEligible: false
+        }
+      });
 
     /* ============================= */
     /* RESPONSE */
     /* ============================= */
 
-    res.status(201).json({
-      message: "Submission sent for review",
+    return res.status(201).json({
+
+      message:
+        "Submission sent for review",
+
       submission
     });
 
   } catch (err) {
-    console.error("SUBMIT VIDEO ERROR:", err);
-    res.status(500).json({
-      message: "Server error"
+
+    console.error(
+      "SUBMIT VIDEO ERROR:",
+      err
+    );
+
+    return res.status(500).json({
+      message:
+        err.message || "Server error"
     });
   }
 };
