@@ -14,43 +14,37 @@ export default function Footer() {
             <h1 className="text-xl font-bold mb-4">CLIPPER HUB</h1>
 
             {/* App buttons */}
-           <div className="flex gap-3 mt-4">
-
-  {/* Google Play */}
-  <a
-    href="#"
-    className="flex items-center gap-2 px-3 py-2"
-  >
-    <img
-      src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-      alt="Google Play"
-      className="h-8"
-    />
-  </a>
-
-  {/* App Store */}
-  <a
-    href="#"
-    className="flex items-center gap-2 px-3 py-2"
-  >
-    <img
-      src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-      alt="App Store"
-      className="h-8"
-    />
-  </a>
-
-</div>
+            <div className="flex gap-3 mt-4">
+            </div>
           </div>
 
           {/* 🔹 Legal */}
           <div>
             <h3 className="font-semibold mb-3 text-indigo-800">Legal</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Privacy Policy</li>
-              <li>Creator Terms</li>
-              <li>Brand Terms</li>
-              <li>Website Terms</li>
+              <li>
+                <a href="/privacy-policy" className="hover:text-indigo-600 transition">
+                  Privacy Policy
+                </a>
+              </li>
+
+              <li>
+                <a href="/creator-terms" className="hover:text-indigo-600 transition">
+                  Creator Terms
+                </a>
+              </li>
+
+              <li>
+                <a href="/brand-terms" className="hover:text-indigo-600 transition">
+                  Brand Terms
+                </a>
+              </li>
+
+              <li>
+                <a href="/website-terms" className="hover:text-indigo-600 transition">
+                  Website Terms
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -58,9 +52,23 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3 text-indigo-800">Company</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Contact Us</li>
-              <li>Support</li>
-              <li>Jobs</li>
+              <li>
+                <a href="/contact" className="hover:text-indigo-600 transition">
+                  Contact Us
+                </a>
+              </li>
+
+              <li>
+                <a href="/support" className="hover:text-indigo-600 transition">
+                  Support
+                </a>
+              </li>
+
+              <li>
+                <a href="/jobs" className="hover:text-indigo-600 transition">
+                  Jobs
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -68,8 +76,17 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3 text-indigo-800">Resources</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Campaign Rules</li>
-              <li>Community</li>
+              <li>
+                <a href="/campaign-rules" className="hover:text-indigo-600 transition">
+                  Campaign Rules
+                </a>
+              </li>
+
+              <li>
+                <a href="/community" className="hover:text-indigo-600 transition">
+                  Community
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -84,9 +101,40 @@ export default function Footer() {
 
           {/* 🔹 Social Icons */}
           <div className="flex gap-4 text-indigo-700">
-            <Instagram size={18} className="hover:text-indigo-500 cursor-pointer" />
-            <Twitter size={18} className="hover:text-indigo-500 cursor-pointer" />
-            <Linkedin size={18} className="hover:text-indigo-500 cursor-pointer" />
+
+            <a
+              href="https://instagram.com/yourusername"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Instagram
+                size={18}
+                className="hover:text-pink-500 cursor-pointer transition"
+              />
+            </a>
+
+            <a
+              href="https://twitter.com/yourusername"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Twitter
+                size={18}
+                className="hover:text-blue-500 cursor-pointer transition"
+              />
+            </a>
+
+            <a
+              href="https://linkedin.com/in/yourusername"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Linkedin
+                size={18}
+                className="hover:text-blue-700 cursor-pointer transition"
+              />
+            </a>
+
           </div>
 
         </div>

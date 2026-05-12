@@ -126,170 +126,179 @@ export default function AuthPage() {
   /* UI */
   /* ============================= */
 
-  return (
-    <div className="flex items-center justify-center min-h-screen px-4 py-6">
-      <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+return (
+  
+    <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-xl p-6 sm:p-8">
 
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-6">
-          <Link to="/">
-            <h1 className="text-2xl sm:text-[35px] font-serif text-pink-900">
-              Clipper Hub
-            </h1>
-          </Link>
-        </div>
-
-        <h1 className="text-xl sm:text-2xl font-bold mb-1 text-pink-900">
-          {tab === "login" ? "Welcome Back" : "Create Account"}
-        </h1>
-
-        <p className="text-pink-800 mb-6 text-sm">
-          {tab === "login" ? (
-            <>
-              Or{" "}
-              <span
-                onClick={() => switchTab("signup")}
-                className="underline cursor-pointer"
-              >
-                create an account
-              </span>{" "}
-              to get started
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <span
-                onClick={() => switchTab("login")}
-                className="underline cursor-pointer"
-              >
-                Log in
-              </span>
-            </>
-          )}
-        </p>
-
-        {/* Tabs */}
-        <div className="bg-pink-100 rounded-full flex p-1 mb-6">
-          <button
-            onClick={() => switchTab("login")}
-            className={`flex-1 py-2 rounded-full text-sm font-medium ${
-              tab === "login" ? "bg-pink-900 text-white" : "text-gray-500"
-            }`}
-          >
-            Log in
-          </button>
-
-          <button
-            onClick={() => switchTab("signup")}
-            className={`flex-1 py-2 rounded-full text-sm font-medium ${
-              tab === "signup" ? "bg-pink-900 text-white" : "text-gray-500"
-            }`}
-          >
-            Sign up
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {tab === "signup" && (
-            <div className="mb-4">
-              <label className="text-sm font-medium">Name</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                type="text"
-                placeholder="Your name"
-                className="w-full mt-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-900"
-              />
-              {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-              )}
-            </div>
-          )}
-
-          <div className="mb-4">
-            <label className="text-sm font-medium">Email</label>
-            <input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              type="email"
-              placeholder="user@gmail.com"
-              className="w-full mt-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-900"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label className="text-sm font-medium">Password</label>
-            <input
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              type="password"
-              placeholder="••••••••"
-              className="w-full mt-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-900"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          <button
-            disabled={loading}
-            className="w-full bg-pink-900 text-pink-50 py-3 rounded-xl font-medium hover:opacity-90 text-sm sm:text-base disabled:opacity-50"
-          >
-            {loading
-              ? "Please wait..."
-              : tab === "login"
-              ? "Sign in to Dashboard"
-              : "Create Account"}
-          </button>
-        </form>
-
-        {/* Google Login */}
-       {/* Google Login */}
-<div className="mt-4 flex justify-center">
-  <GoogleLogin
-    onSuccess={async (credentialResponse) => {
-      try {
-        const result = await authApi.google({
-          token: credentialResponse.credential,
-        });
-
-        // ✅ FIXED: new store format
-        useAuthStore.getState().setAuth(result);
-
-        // ✅ Toast based on role
-        toast.success(
-          result.user.role === "admin"
-            ? "Welcome Admin 👑"
-            : "Logged in with Google successfully!"
-        );
-
-        // 🔥 Admin redirect
-        setTimeout(() => {
-  if (result.user.role === "admin") {
-    navigate("/admin");
-  } else {
-    navigate("/dashboard");
-  }
-}, 50);
-      } catch (err) {
-        console.error("Google login failed", err);
-        toast.error("Google login failed");
-      }
-    }}
-    onError={() => {
-      toast.error("Google login failed");
-    }}
-  />
-</div>
-
+      {/* Logo */}
+      <div className="flex items-center gap-3 mb-6">
+        <Link to="/">
+          <h1 className="text-2xl sm:text-[35px] font-serif text-violet-700">
+            Clipper Hub
+          </h1>
+        </Link>
       </div>
+
+      <h1 className="text-xl sm:text-2xl font-bold mb-1 text-violet-700">
+        {tab === "login" ? "Welcome Back" : "Create Account"}
+      </h1>
+
+      <p className="text-violet-500 mb-6 text-sm">
+        {tab === "login" ? (
+          <>
+            Or{" "}
+            <span
+              onClick={() => switchTab("signup")}
+              className="underline cursor-pointer hover:text-violet-700 transition"
+            >
+              create an account
+            </span>{" "}
+            to get started
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <span
+              onClick={() => switchTab("login")}
+              className="underline cursor-pointer hover:text-violet-700 transition"
+            >
+              Log in
+            </span>
+          </>
+        )}
+      </p>
+
+      {/* Tabs */}
+      <div className="bg-violet-100 rounded-full flex p-1 mb-6">
+        <button
+          onClick={() => switchTab("login")}
+          className={`flex-1 py-2 rounded-full text-sm font-medium transition ${
+            tab === "login"
+              ? "bg-violet-600 text-white shadow-md"
+              : "text-violet-500"
+          }`}
+        >
+          Log in
+        </button>
+
+        <button
+          onClick={() => switchTab("signup")}
+          className={`flex-1 py-2 rounded-full text-sm font-medium transition ${
+            tab === "signup"
+              ? "bg-violet-600 text-white shadow-md"
+              : "text-violet-500"
+          }`}
+        >
+          Sign up
+        </button>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        {tab === "signup" && (
+          <div className="mb-4">
+            <label className="text-sm font-medium text-violet-700">
+              Name
+            </label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              type="text"
+              placeholder="Your name"
+              className="w-full mt-1 border border-violet-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="text-sm font-medium text-violet-700">
+            Email
+          </label>
+          <input
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            type="email"
+            placeholder="user@gmail.com"
+            className="w-full mt-1 border border-violet-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
+        </div>
+
+        <div className="mb-6">
+          <label className="text-sm font-medium text-violet-700">
+            Password
+          </label>
+          <input
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            type="password"
+            placeholder="••••••••"
+            className="w-full mt-1 border border-violet-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+          )}
+        </div>
+
+        <button
+          disabled={loading}
+          className="w-full bg-violet-600 text-white py-3 rounded-xl font-medium hover:bg-violet-700 transition text-sm sm:text-base disabled:opacity-50"
+        >
+          {loading
+            ? "Please wait..."
+            : tab === "login"
+            ? "Sign in to Dashboard"
+            : "Create Account"}
+        </button>
+      </form>
+
+      {/* Google Login */}
+      <div className="mt-4 flex justify-center">
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              const result = await authApi.google({
+                token: credentialResponse.credential,
+              });
+
+              // ✅ FIXED: new store format
+              useAuthStore.getState().setAuth(result);
+
+              // ✅ Toast based on role
+              toast.success(
+                result.user.role === "admin"
+                  ? "Welcome Admin 👑"
+                  : "Logged in with Google successfully!"
+              );
+
+              // 🔥 Admin redirect
+              setTimeout(() => {
+                if (result.user.role === "admin") {
+                  navigate("/admin");
+                } else {
+                  navigate("/dashboard");
+                }
+              }, 50);
+            } catch (err) {
+              console.error("Google login failed", err);
+              toast.error("Google login failed");
+            }
+          }}
+          onError={() => {
+            toast.error("Google login failed");
+          }}
+        />
+      </div>
+
     </div>
-  );
+
+);
 }
